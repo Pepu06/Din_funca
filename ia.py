@@ -6,7 +6,7 @@ from transformers import AdamW
 from tqdm import tqdm
 
 # Cargar los datos desde el archivo CSV
-file_path = 'chat1.csv'  # Asegúrate de proporcionar la ruta correcta
+file_path = 'mati.csv'  # Asegúrate de proporcionar la ruta correcta
 data = pd.read_csv(file_path, delimiter='|')
 
 # Definir una clase de conjunto de datos personalizada para procesar los datos
@@ -20,7 +20,7 @@ class CustomDataset(Dataset):
         return len(self.data)
     
     def __getitem__(self, idx):
-        text = self.data.iloc[idx]['Mensaje']
+        text = self.data.iloc[idx]['text']
         encoding = self.tokenizer.encode_plus(text, padding='max_length', max_length=self.max_length, return_tensors='pt', truncation=True)
         return {
             'input_ids': encoding['input_ids'].flatten(),
