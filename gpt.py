@@ -8,7 +8,7 @@ import csv
 
 # Cargar el tokenizer y el modelo entrenado
 tokenizer = AutoTokenizer.from_pretrained("datificate/gpt2-small-spanish")
-model = GPT2LMHeadModel.from_pretrained("fine_tuned_gpt2_pedro")
+model = AutoModelForCausalLM.from_pretrained("Pepu06/Din1.0")
 
 # Función para asegurar que las respuestas sean oraciones completas
 def ensure_complete_sentences(text):
