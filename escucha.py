@@ -20,7 +20,7 @@ model = genai.GenerativeModel(
 chat_history = []
 
 # Lee el archivo CSV y extrae el contenido de interés
-csv_file = '/mati.csv'
+csv_file = 'mati.csv'
 df = pd.read_csv(csv_file, delimiter="|")
 texts = df['text'].tolist()
 
@@ -33,24 +33,36 @@ def buscar_ejemplos(palabras_clave, textos):
     return ejemplos_relevantes
 
 # Función para ajustar la entrada al modelo basado en los ejemplos encontrados
-def generate_prompt(user_input, examples, history):
+def generate_prompt(audio_context, user_input, examples, history):
     prompt = "Contexto de la conversación:\n"
+    prompt += f"- Contexto del micrófono: {audio_context}\n"
     for mensaje in history:
         prompt += f"- {mensaje}\n"
     prompt += f"\nIngresa el texto: {user_input}\n\n"
     prompt += "Basado en los siguientes ejemplos, completa la oración de manera similar:\n\n"
     for example in examples:
         prompt += f"- {example}\n"
+
+    # Imprimir el prompt generado
+    print("Prompt generado para el modelo:")
+    print(prompt)
+    
     return prompt
 
 # Función para completar el texto usando Gemini y obtener múltiples respuestas
-def completar_texto(texto_usuario):
+def completar_texto(audio_context, texto_usuario):
     global chat_history
     palabras_clave = texto_usuario.split()
     ejemplos = buscar_ejemplos(palabras_clave, texts)
     if not ejemplos:
         ejemplos = texts[-5:]
-    prompt = generate_prompt(texto_usuario, ejemplos, chat_history)
+    
+    # Imprimir ejemplos seleccionados
+    print("Ejemplos seleccionados:")
+    for example in ejemplos:
+        print(f"- {example}")
+    
+    prompt = generate_prompt(audio_context, texto_usuario, ejemplos, chat_history)
 
     respuestas = []
     for _ in range(3):  # Generar tres respuestas
@@ -59,6 +71,7 @@ def completar_texto(texto_usuario):
         respuestas.append(respuesta_texto)
 
     # Actualizar el historial del chat
+    chat_history.append(f"Contexto del micrófono: {audio_context}")
     chat_history.append(f"Usuario: {texto_usuario}")
     for resp in respuestas:
         chat_history.append(f"AI: {resp}")
@@ -104,7 +117,7 @@ def main():
             user_input = input("Ingresa un texto (o 'salir' para terminar): ")
             if user_input.lower() == 'salir':
                 break
-            respuestas = completar_texto(user_input)
+            respuestas = completar_texto(contexto_audio, user_input)
             for idx, respuesta in enumerate(respuestas, start=1):
                 print(f"Respuesta {idx}: {respuesta}")
 
