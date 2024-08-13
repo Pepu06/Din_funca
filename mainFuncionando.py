@@ -1,6 +1,10 @@
+import threading
 import pandas as pd
 import google.generativeai as genai
 import speech_recognition as sr
+import csv
+import pyttsx3
+import time  # Para medir el tiempo de respuesta
 
 # Configura la clave de API de Gemini
 GOOGLE_API_KEY = 'AIzaSyAI6SmUQbQ9wJohy53_kssfZuzoLG5FRes'
@@ -43,10 +47,6 @@ def generate_prompt(audio_context, user_input, examples, history):
     for example in examples:
         prompt += f"- {example}\n"
 
-    # Imprimir el prompt generado
-    print("Prompt generado para el modelo:")
-    print(prompt)
-    
     return prompt
 
 # Función para completar el texto usando Gemini y obtener múltiples respuestas
@@ -57,18 +57,20 @@ def completar_texto(audio_context, texto_usuario):
     if not ejemplos:
         ejemplos = texts[-5:]
     
-    # Imprimir ejemplos seleccionados
-    print("Ejemplos seleccionados:")
-    for example in ejemplos:
-        print(f"- {example}")
-    
     prompt = generate_prompt(audio_context, texto_usuario, ejemplos, chat_history)
 
     respuestas = []
+    tiempos_respuesta = []
     for _ in range(3):  # Generar tres respuestas
+        start_time = time.time()
         response = model.generate_content([prompt])
+        tiempo = time.time() - start_time
+        tiempos_respuesta.append(tiempo)
         respuesta_texto = response.text.strip()
         respuestas.append(respuesta_texto)
+
+    # Mostrar tiempos de respuesta
+    print(f"Tiempos de respuesta (segundos): {tiempos_respuesta}")
 
     # Actualizar el historial del chat
     chat_history.append(f"Contexto del micrófono: {audio_context}")
@@ -102,8 +104,10 @@ def escuchar_mic():
 # Interacción con el usuario
 def main():
     global chat_history
+    audio_contexto = ""
+
     while True:
-        print("Di algo para usar como contexto (o di 'salir' para terminar):")
+        print("Actualizando contexto de audio...")
         contexto_audio = escuchar_mic()
         if contexto_audio is None:
             continue
@@ -113,13 +117,25 @@ def main():
         print(f"Contexto capturado: {contexto_audio}")
         chat_history.append(f"Contexto: {contexto_audio}")
 
-        while True:
-            user_input = input("Ingresa un texto (o 'salir' para terminar): ")
-            if user_input.lower() == 'salir':
-                break
-            respuestas = completar_texto(contexto_audio, user_input)
-            for idx, respuesta in enumerate(respuestas, start=1):
-                print(f"Respuesta {idx}: {respuesta}")
+        user_input = input("Ingresa un texto (o 'salir' para terminar): ")
+        if user_input.lower() == 'salir':
+            break
+        respuestas = completar_texto(contexto_audio, user_input)
+        for idx, respuesta in enumerate(respuestas, start=1):
+            print(f"Respuesta {idx}: {respuesta}")
+
+def agregar_texto_a_csv(archivo_csv, texto):
+    # Abre el archivo CSV en modo 'a' (append) para agregar una nueva línea
+    with open(archivo_csv, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter='|')
+        # Escribe una nueva fila con el texto proporcionado
+        writer.writerow([texto])
+
+def lee_texto(texto):
+    engine = pyttsx3.init()
+    engine.save_to_file(texto, 'hello.mp3')
+    engine.runAndWait()
+    return 'hello.mp3'
 
 if __name__ == '__main__':
     main()
