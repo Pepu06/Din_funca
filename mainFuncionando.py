@@ -46,18 +46,17 @@ def generate_prompt(audio_context, user_input, examples, history):
     prompt += "Basado en los siguientes ejemplos, completa la oración de manera similar:\n\n"
     for example in examples:
         prompt += f"- {example}\n"
-
     return prompt
 
-# Función para completar el texto usando Gemini y obtener múltiples respuestas
-def completar_texto(audio_context, texto_usuario):
+# Función para completar el texto usando el contexto del audio y el input del usuario
+def completar_texto_con_audio(audio_context, user_input):
     global chat_history
-    palabras_clave = texto_usuario.split()
+    palabras_clave = user_input.split()
     ejemplos = buscar_ejemplos(palabras_clave, texts)
     if not ejemplos:
         ejemplos = texts[-5:]
     
-    prompt = generate_prompt(audio_context, texto_usuario, ejemplos, chat_history)
+    prompt = generate_prompt(audio_context, user_input, ejemplos, chat_history)
 
     respuestas = []
     tiempos_respuesta = []
@@ -74,7 +73,44 @@ def completar_texto(audio_context, texto_usuario):
 
     # Actualizar el historial del chat
     chat_history.append(f"Contexto del micrófono: {audio_context}")
-    chat_history.append(f"Usuario: {texto_usuario}")
+    chat_history.append(f"Usuario: {user_input}")
+    for resp in respuestas:
+        chat_history.append(f"AI: {resp}")
+
+    # Limitar el tamaño del historial para no acumular demasiado
+    if len(chat_history) > 20:
+        chat_history = chat_history[-20:]
+
+    return respuestas
+
+# Función para completar el texto solo con el input del usuario
+def completar_texto_con_usuario(user_input):
+    global chat_history
+    palabras_clave = user_input.split()
+    ejemplos = buscar_ejemplos(palabras_clave, texts)
+    if not ejemplos:
+        ejemplos = texts[-5:]
+    
+    prompt = f"Ingresa el texto: {user_input}\n\n"
+    prompt += "Basado en los siguientes ejemplos, completa la oración de manera similar:\n\n"
+    for example in ejemplos:
+        prompt += f"- {example}\n"
+
+    respuestas = []
+    tiempos_respuesta = []
+    for _ in range(3):  # Generar tres respuestas
+        start_time = time.time()
+        response = model.generate_content([prompt])
+        tiempo = time.time() - start_time
+        tiempos_respuesta.append(tiempo)
+        respuesta_texto = response.text.strip()
+        respuestas.append(respuesta_texto)
+
+    # Mostrar tiempos de respuesta
+    print(f"Tiempos de respuesta (segundos): {tiempos_respuesta}")
+
+    # Actualizar el historial del chat
+    chat_history.append(f"Usuario: {user_input}")
     for resp in respuestas:
         chat_history.append(f"AI: {resp}")
 
@@ -101,7 +137,20 @@ def escuchar_mic():
             print(f"Error en la solicitud de reconocimiento: {e}")
             return None
 
-# Interacción con el usuario
+# Función para agregar texto a un archivo CSV
+def agregar_texto_a_csv(archivo_csv, texto):
+    with open(archivo_csv, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter='|')
+        writer.writerow([texto])
+
+# Función para leer texto en voz alta
+def lee_texto(texto):
+    engine = pyttsx3.init()
+    engine.save_to_file(texto, 'hello.mp3')
+    engine.runAndWait()
+    return 'hello.mp3'
+
+# Función principal para la interacción con el usuario
 def main():
     global chat_history
     audio_contexto = ""
@@ -120,22 +169,10 @@ def main():
         user_input = input("Ingresa un texto (o 'salir' para terminar): ")
         if user_input.lower() == 'salir':
             break
-        respuestas = completar_texto(contexto_audio, user_input)
+        
+        respuestas = completar_texto_con_audio(contexto_audio, user_input)
         for idx, respuesta in enumerate(respuestas, start=1):
             print(f"Respuesta {idx}: {respuesta}")
-
-def agregar_texto_a_csv(archivo_csv, texto):
-    # Abre el archivo CSV en modo 'a' (append) para agregar una nueva línea
-    with open(archivo_csv, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file, delimiter='|')
-        # Escribe una nueva fila con el texto proporcionado
-        writer.writerow([texto])
-
-def lee_texto(texto):
-    engine = pyttsx3.init()
-    engine.save_to_file(texto, 'hello.mp3')
-    engine.runAndWait()
-    return 'hello.mp3'
 
 if __name__ == '__main__':
     main()
