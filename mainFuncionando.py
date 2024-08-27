@@ -1,10 +1,12 @@
-import threading
+from flask import Flask, request, jsonify
 import pandas as pd
 import google.generativeai as genai
 import speech_recognition as sr
 import csv
 import pyttsx3
-import time  # Para medir el tiempo de respuesta
+import time
+
+app = Flask(__name__)
 
 # Configura la clave de API de Gemini
 GOOGLE_API_KEY = 'AIzaSyAI6SmUQbQ9wJohy53_kssfZuzoLG5FRes'
@@ -150,29 +152,14 @@ def lee_texto(texto):
     engine.runAndWait()
     return 'hello.mp3'
 
-# Función principal para la interacción con el usuario
-def main():
-    global chat_history
-    audio_contexto = ""
+@app.route('/completar_texto', methods=['POST'])
+def completar_texto():
+    data = request.json
+    user_input = data.get('user_input', "")
 
-    while True:
-        print("Actualizando contexto de audio...")
-        contexto_audio = escuchar_mic()
-        if contexto_audio is None:
-            continue
-        if contexto_audio.lower() == 'salir':
-            break
+    respuestas = completar_texto_con_usuario(user_input)
+    return jsonify(respuestas=respuestas)
 
-        print(f"Contexto capturado: {contexto_audio}")
-        chat_history.append(f"Contexto: {contexto_audio}")
-
-        user_input = input("Ingresa un texto (o 'salir' para terminar): ")
-        if user_input.lower() == 'salir':
-            break
-        
-        respuestas = completar_texto_con_audio(contexto_audio, user_input)
-        for idx, respuesta in enumerate(respuestas, start=1):
-            print(f"Respuesta {idx}: {respuesta}")
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True, host='0.0.0.0', port=5000)
