@@ -57,8 +57,11 @@ def generate_prompt(audio_context, user_input, examples, history):
     return prompt
 
 # Función para completar el texto usando el contexto del audio y el input del usuario
-def completar_texto_con_audio(audio_context, user_input):
+@app.route('/autocompleteConAudio', methods=['POST'])
+def completar_texto_con_audio():
     global chat_history
+    audio_context = json.loads(request.get_data().decode("utf-8"))["audio"]
+    user_input = json.loads(request.get_data().decode("utf-8"))["texto"]
     palabras_clave = user_input.split()
     ejemplos = buscar_ejemplos(palabras_clave, texts)
     if not ejemplos:
