@@ -5,6 +5,7 @@ import speech_recognition as sr
 import csv
 import pyttsx3
 import time
+import json
 
 app = Flask(__name__)
 
@@ -55,7 +56,6 @@ def generate_prompt(audio_context, user_input, examples, history):
     return prompt
 
 # Función para completar el texto usando el contexto del audio y el input del usuario
-@app.route('/autocomplete', methods=['POST'])
 def completar_texto_con_audio(audio_context, user_input):
     global chat_history
     palabras_clave = user_input.split()
@@ -91,8 +91,10 @@ def completar_texto_con_audio(audio_context, user_input):
     return respuestas
 
 # Función para completar el texto solo con el input del usuario
-def completar_texto_con_usuario(user_input):
+@app.route('/autocomplete', methods=['POST'])
+def completar_texto_con_usuario():
     global chat_history
+    user_input = json.loads(request.get_data().decode("utf-8"))["texto"]
     palabras_clave = user_input.split()
     ejemplos = buscar_ejemplos(palabras_clave, texts)
     if not ejemplos:
