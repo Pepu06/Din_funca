@@ -2,13 +2,14 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import google.generativeai as genai
 import speech_recognition as sr
+from flask_cors import CORS
 import csv
 import pyttsx3
 import time
 import json
 
 app = Flask(__name__)
-
+CORS(app)
 # Configura la clave de API de Gemini
 GOOGLE_API_KEY = 'AIzaSyAI6SmUQbQ9wJohy53_kssfZuzoLG5FRes'
 genai.configure(api_key=GOOGLE_API_KEY)
