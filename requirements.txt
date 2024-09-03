@@ -3,4 +3,4 @@ pyttsx3
 pandas
 google-generativeai
 flask
-waitress
+gunicorn 
