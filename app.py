@@ -30,6 +30,10 @@ csv_file = 'mati.csv'
 df = pd.read_csv(csv_file, delimiter="|")
 texts = df['text'].tolist()
 
+@app.route('/')
+def hello(): 
+    return "Hola Dan"
+
 # Función para buscar ejemplos relevantes basados en palabras clave
 def buscar_ejemplos(palabras_clave, textos):
     ejemplos_relevantes = []
