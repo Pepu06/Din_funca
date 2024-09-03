@@ -51,6 +51,7 @@ def generate_prompt(audio_context, user_input, examples, history):
     return prompt
 
 # Función para completar el texto usando el contexto del audio y el input del usuario
+@app.route('/autocomplete', methods=['POST'])
 def completar_texto_con_audio(audio_context, user_input):
     global chat_history
     palabras_clave = user_input.split()
@@ -151,15 +152,6 @@ def lee_texto(texto):
     engine.save_to_file(texto, 'hello.mp3')
     engine.runAndWait()
     return 'hello.mp3'
-
-@app.route('/completar_texto', methods=['POST'])
-def completar_texto():
-    data = request.json
-    user_input = data.get('user_input', "")
-
-    respuestas = completar_texto_con_usuario(user_input)
-    return jsonify(respuestas=respuestas)
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
