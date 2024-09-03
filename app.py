@@ -68,6 +68,7 @@ def completar_texto_con_audio():
         ejemplos = texts[-5:]
     
     prompt = generate_prompt(audio_context, user_input, ejemplos, chat_history)
+    prompt += "Para generar las respuestas utilizar el contexto de la conversacion pasada {audio_context}"
 
     respuestas = []
     tiempos_respuesta = []
