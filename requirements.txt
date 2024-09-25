@@ -1,7 +1,12 @@
 SpeechRecognition
 pyttsx3
-pandas
-google-generativeai
 flask
 gunicorn 
 flask_cors
+pypdf==4.0.0
+PyPDF2==3.0.1
+pandas==2.2.0
+chromadb==0.4.22
+google-generativeai==0.3.2
+writing
+PyAudio
