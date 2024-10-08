@@ -197,6 +197,5 @@ def generate_response(text_user):
 
     answer = generate_answer(db,text_user)
     print(answer)
+    os.rmdir("RAG")
 
-escuchar_mic()
-generate_response()
