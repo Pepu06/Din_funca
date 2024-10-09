@@ -26,7 +26,9 @@ test_cases = [
 # Prepare LLMTestCase instances
 llm_test_cases = []
 for case in test_cases:
+    print(case["input"])
     actual_output = generate_response(case["input"])  # Generate output using Gemini
+    print(actual_output)
     llm_test_cases.append(LLMTestCase(
         input=case["input"],
         actual_output=actual_output,
@@ -34,15 +36,19 @@ for case in test_cases:
         retrieval_context=case["retrieval_context"]
     ))
 
+
 # Define the metric
 metric = RagasMetric(threshold=0.5, model="gemini-pro")
 
 # Evaluate the test cases
 scores = evaluate(llm_test_cases, [metric])
 
+#print the input and output
+# for case in test_cases:
+#     print(f"Input: {case['input']}")
+#     print(f"Expected Output: {case['expected_output']}")
+#     print(f"Actual Output: {generate_response(case['input'])}")
+#     print("")
+
 # Print results
-for test_case, score in zip(llm_test_cases, scores):
-    print(f"Input: {test_case.input}")
-    print(f"Actual Output: {test_case.actual_output}")
-    print(f"Expected Output: {test_case.expected_output}")
-    print(f"Score: {score}")
+print(scores)

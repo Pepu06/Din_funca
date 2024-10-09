@@ -1,3 +1,4 @@
+import time
 from flask import Flask, request, jsonify 
 import os
 import re
@@ -14,6 +15,7 @@ import google.generativeai as genai
 from pypdf import PdfReader
 from dotenv import load_dotenv
 import os
+import shutil
 
 load_dotenv()
 
@@ -151,22 +153,21 @@ def escuchar_mic():
 def make_rag_prompt(query, texto_mic, relevant_passage):
     escaped_passage = relevant_passage.replace("'", "").replace('"', "").replace("\n", " ")
     escaped_texto_mic = texto_mic.replace("'", "").replace('"', "").replace("\n", " ")
-    prompt = ("""You are a helpful SPANISH and knowledgeable assistant that helps complete text using the reference passage and microphone context included below. \
-    Ensure your response is fluent, coherent, and relevant to the user's text, adding value and depth where appropriate. \
-    You are assisting a general audience, so focus on clarity, providing thoughtful and well-structured continuations or expansions of the given text. Maintain a friendly, conversational tone. \
-    Give considerable importance to the context provided by the microphone. Generate ALWAYS three options of the completed text for the user to choose from. \
-    Each one should be unique and different from the others and NOT MUCH LNGER than the user's text. \
-    If the passage does not provide relevant information, you may complete the user's text based on your understanding. \
-    Your responses have to be like this one: \
-    1. user_text + your response \
-    2. user_text + your response \
-    3. user_text + your response \
-            
-    USER TEXT: '{query}'
-    PASSAGE: '{escaped_passage}'
-    MICROPHONE CONTEXT: '{escaped_texto_mic}'
+    prompt = ("""You are a helpful SPANISH and knowledgeable assistant that helps complete text using the reference passage and microphone context included below.
+Ensure your response is fluent, coherent, and relevant to the user's text, adding value and depth where appropriate.
+Focus on clarity, providing thoughtful and well-structured continuations or expansions of the given text in a friendly, conversational tone.
+Generate ALWAYS three distinct options of the completed text, each not exceeding 10 words. Ensure that each option varies in structure and approach.
+If the passage does not provide relevant information, complete the user's text based on your understanding while maintaining relevance.
+Your responses should follow this format:
 
-    COMPLETION:
+user_text + your response1
+user_text + your response2
+user_text + your response3
+USER TEXT: '{query}'
+PASSAGE: '{escaped_passage}'
+MICROPHONE CONTEXT: '{escaped_texto_mic}'
+
+COMPLETION:
     """).format(query=query, escaped_passage=escaped_passage, escaped_texto_mic=escaped_texto_mic)
 
     return prompt
@@ -184,10 +185,13 @@ def generate_response(text_user):
     def generate_answer(db,query):
         #retrieve top 3 relevant text chunks
         texto_mic = escuchar_mic()
+        # print(texto_mic)
         relevant_text = get_relevant_passage(query,db,n_results=3)
+        # print(relevant_text)
         prompt = make_rag_prompt(query, 
                                 texto_mic,
                                 relevant_passage="".join(relevant_text)) # joining the relevant chunks to create a single passage
+        # print(prompt)
         answer = generate_answer_by_prompt(prompt)
 
         return answer
@@ -196,6 +200,11 @@ def generate_response(text_user):
                             name="rag_experiment") #replace with the collection name
 
     answer = generate_answer(db,text_user)
-    print(answer)
-    os.rmdir("RAG")
+
+    # rag_path = "RAG"  # Path de la carpeta RAG
+    # if os.path.exists(rag_path):
+    #     shutil.rmtree(rag_path)  # Eliminar la carpeta y su contenido
+
+    return answer
+
 
