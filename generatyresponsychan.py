@@ -161,34 +161,42 @@ def escuchar_mic():
 
 def make_rag_prompt(query, relevant_passage):
     escaped_passage = relevant_passage.replace("'", "").replace('"', "").replace("\n", " ")
-    prompt = ("""
+    prompt = (f"""
 
 **TEXTO DEL USUARIO:** '{query}'  
 **PASAJE:** '{escaped_passage}'  
 
-**ESTRUCTURA:** = 
-    "TEXTO DEL USUARIO": {query},
-    "Respuestas": [
-        r1, r2, r3
-    ]
+**ESTRUCTURA:** 
+**1:**
+**2:**
+**3:**
 
 ""Como IA, tu personalidad está enfocada en ayudar al usuario a completar textos rápidamente, sin necesidad de escribir oraciones completas. Usa el TEXTO DEL USUARIO como base para generar tres continuaciones fluidas y naturales que ayuden a completar la idea. El PASAJE proporciona un contexto adicional. Asegúrate de que cada una de las tres respuestas siga la misma ESTRUCTURA. Además, asegúrate de que casos simples como 'hola' o 'chau' se completen con un saludo apropiado.""
-    """).format(query=query, escaped_passage=escaped_passage)
+    """)
 
     return prompt
 
 def generate_answer_by_prompt(prompt):
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        raise ValueError("Gemini API Key not provided. Please provide GEMINI_API_KEY as an environment variable")
-    genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel('gemini-pro')
-    answer = model.generate_content(prompt)
-    return answer.text
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
-                                # texto_mic,
-                                        # texto_mic = escuchar_mic()
+    # Create the model
+    generation_config = {
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 8192,
+    }
 
+    model = genai.GenerativeModel(
+    model_name="gemini-1.5-pro-002",
+    generation_config=generation_config,
+    )
+
+    chat_session = model.start_chat(history=[])
+
+    response = chat_session.send_message(prompt)
+    
+    return response.text
     
 def generate_response(text_user):
     def generate_answer(db,query):

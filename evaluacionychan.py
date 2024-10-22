@@ -20,17 +20,19 @@ def comparar_res(texto1, texto2):
 
     response = model.generate_content(prompt)
 
-    return response.text
+    response = response.candidates[0].content.parts[0].text
 
-texto1 = """
+    return response
+
+expected = """
 - Hola, como estas?
 - Hola, buen dia
 - Hola, que tal?
 """
 
-texto2 = generate_response(input("Ingrese un texto: "))
-print(texto2)
+generated = generate_response(input("Ingrese un texto: "))
+print("generated: ", generated)
 
-comparacion = comparar_res(texto1, texto2)
+comparacion = comparar_res(expected, generated)
 
-print(comparacion)
+print("comparacion: ", comparacion)
