@@ -1,10 +1,8 @@
-from deepeval import evaluate
-from deepeval.metrics.ragas import RagasMetric
-from deepeval.test_case import LLMTestCase
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 from generatyresponsychan import generate_response
+from generatyresponsychan import load_chroma_collection
 
 # Load environment variables
 load_dotenv()
@@ -12,43 +10,27 @@ load_dotenv()
 # Set up your Gemini API key
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
-
-# Define your test cases
-test_cases = [
-    {
-        "input": "What if these shoes don't fit?",
-        "expected_output": "You are eligible for a 30 day full refund at no extra cost.",
-        "retrieval_context": ["All customers are eligible for a 30 day full refund at no extra cost."]
-    },
-    # Add more test cases as needed
-]
-
-# Prepare LLMTestCase instances
-llm_test_cases = []
-for case in test_cases:
-    print(case["input"])
-    actual_output = generate_response(case["input"])  # Generate output using Gemini
-    print(actual_output)
-    llm_test_cases.append(LLMTestCase(
-        input=case["input"],
-        actual_output=actual_output,
-        expected_output=case["expected_output"],
-        retrieval_context=case["retrieval_context"]
-    ))
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 
-# Define the metric
-metric = RagasMetric(threshold=0.5, model="gemini-pro")
+def comparar_res(texto1, texto2):
+    # Crear un prompt para hacer la comparación entre los dos textos
+    prompt = f"Compara la similitud entre los siguientes dos textos:\n\nTexto 1: {texto1}\n\nTexto 2: {texto2}\n\n" \
+             f"Unicamente indica qué tan similares son en una escala del 1 al 100"
 
-# Evaluate the test cases
-scores = evaluate(llm_test_cases, [metric])
+    response = model.generate_content(prompt)
 
-#print the input and output
-# for case in test_cases:
-#     print(f"Input: {case['input']}")
-#     print(f"Expected Output: {case['expected_output']}")
-#     print(f"Actual Output: {generate_response(case['input'])}")
-#     print("")
+    return response.text
 
-# Print results
-print(scores)
+texto1 = """
+- Hola, como estas?
+- Hola, buen dia
+- Hola, que tal?
+"""
+
+texto2 = generate_response(input("Ingrese un texto: "))
+print(texto2)
+
+comparacion = comparar_res(texto1, texto2)
+
+print(comparacion)

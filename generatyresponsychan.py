@@ -19,6 +19,10 @@ import shutil
 
 load_dotenv()
 
+if os.path.isdir("RAG"):
+    shutil.rmtree("RAG")
+    print("RAG folder deleted")
+
 def load_pdf(file_path):
     """
     Reads the text content from a PDF file and returns it as a single string.
@@ -150,25 +154,26 @@ def escuchar_mic():
     texto = "Hola, me llamo Dan"
     return texto
 
-def make_rag_prompt(query, texto_mic, relevant_passage):
+# texto_mic,
+# escaped_texto_mic = texto_mic.replace("'", "").replace('"', "").replace("\n", " ")
+# MICROPHONE CONTEXT: '{escaped_texto_mic}'
+# , escaped_texto_mic=escaped_texto_mic
+
+def make_rag_prompt(query, relevant_passage):
     escaped_passage = relevant_passage.replace("'", "").replace('"', "").replace("\n", " ")
-    escaped_texto_mic = texto_mic.replace("'", "").replace('"', "").replace("\n", " ")
-    prompt = ("""You are a helpful SPANISH and knowledgeable assistant that helps complete text using the reference passage and microphone context included below.
-Ensure your response is fluent, coherent, and relevant to the user's text, adding value and depth where appropriate.
-Focus on clarity, providing thoughtful and well-structured continuations or expansions of the given text in a friendly, conversational tone.
-Generate ALWAYS three distinct options of the completed text, each not exceeding 10 words. Ensure that each option varies in structure and approach.
-If the passage does not provide relevant information, complete the user's text based on your understanding while maintaining relevance.
-Your responses should follow this format:
+    prompt = ("""
 
-user_text + your response1
-user_text + your response2
-user_text + your response3
-USER TEXT: '{query}'
-PASSAGE: '{escaped_passage}'
-MICROPHONE CONTEXT: '{escaped_texto_mic}'
+**TEXTO DEL USUARIO:** '{query}'  
+**PASAJE:** '{escaped_passage}'  
 
-COMPLETION:
-    """).format(query=query, escaped_passage=escaped_passage, escaped_texto_mic=escaped_texto_mic)
+**ESTRUCTURA:** = 
+    "TEXTO DEL USUARIO": {query},
+    "Respuestas": [
+        r1, r2, r3
+    ]
+
+""Como IA, tu personalidad está enfocada en ayudar al usuario a completar textos rápidamente, sin necesidad de escribir oraciones completas. Usa el TEXTO DEL USUARIO como base para generar tres continuaciones fluidas y naturales que ayuden a completar la idea. El PASAJE proporciona un contexto adicional. Asegúrate de que cada una de las tres respuestas siga la misma ESTRUCTURA. Además, asegúrate de que casos simples como 'hola' o 'chau' se completen con un saludo apropiado.""
+    """).format(query=query, escaped_passage=escaped_passage)
 
     return prompt
 
@@ -181,15 +186,17 @@ def generate_answer_by_prompt(prompt):
     answer = model.generate_content(prompt)
     return answer.text
 
+                                # texto_mic,
+                                        # texto_mic = escuchar_mic()
+
+    
 def generate_response(text_user):
     def generate_answer(db,query):
         #retrieve top 3 relevant text chunks
-        texto_mic = escuchar_mic()
         # print(texto_mic)
         relevant_text = get_relevant_passage(query,db,n_results=3)
         # print(relevant_text)
         prompt = make_rag_prompt(query, 
-                                texto_mic,
                                 relevant_passage="".join(relevant_text)) # joining the relevant chunks to create a single passage
         # print(prompt)
         answer = generate_answer_by_prompt(prompt)
@@ -201,10 +208,7 @@ def generate_response(text_user):
 
     answer = generate_answer(db,text_user)
 
-    # rag_path = "RAG"  # Path de la carpeta RAG
-    # if os.path.exists(rag_path):
-    #     shutil.rmtree(rag_path)  # Eliminar la carpeta y su contenido
-
     return answer
 
 
+# print(generate_response(input("Texto: ")))
